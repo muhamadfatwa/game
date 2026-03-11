@@ -299,22 +299,28 @@
 function aktifkanTombolLari() {
     const btnTidak = document.getElementById('btn-tidak');
 
-    // Saat diklik pakai Mouse (PC)
-    btnTidak.onmousedown = function() {
-        pindahPosisi();
-    };
+    // --- KONTROL UNTUK PC (Spasi) ---
+window.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+        lompat();
+    }
+});
 
-    // Saat ditekan pakai Jari (HP)
-    btnTidak.ontouchstart = function(e) {
-        e.preventDefault(); // Mencegah klik terproses
-        pindahPosisi();
-    };
+// --- KONTROL UNTUK HP (Tap di mana saja) ---
+// Kita pakai "touchstart" pada window agar seluruh layar sensitif terhadap sentuhan
+window.addEventListener("touchstart", function(e) {
+    // Cek apakah yang ditekan bukan tombol "Lanjut" atau "Mau" agar tidak bentrok
+    if (e.target.tagName !== 'BUTTON') {
+        lompat();
+    }
+}, { passive: false });
 
-    // Opsional: Jika dia pakai keyboard (Tab + Enter), tombol tetap pindah
-    btnTidak.onclick = function(e) {
-        e.preventDefault();
-        pindahPosisi();
-    };
+// Fungsi utama lompat
+function lompat() {
+    if (isPlaying && flamingo.grounded) {
+        flamingo.dy = -flamingo.jump;
+        flamingo.grounded = false;
+    }
 }
     </script>
 </body>
