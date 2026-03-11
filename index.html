@@ -57,7 +57,7 @@
 </head>
 <body>
 
-    <audio id="bgm" loop>
+    <audio id="bgm" loop preload="auto">
         <source src="musik_ceria.mp3" type="audio/mpeg">
     </audio>
 
@@ -90,6 +90,7 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const bgm = document.getElementById("bgm");
         canvas.width = 800;
         canvas.height = 250;
 
@@ -98,6 +99,7 @@
         let isPlaying = true;
         let speed = 6;
         let animationFrame;
+        let musicStarted = false;
 
         // Assets Loader
         let assetsLoaded = 0;
@@ -187,42 +189,38 @@
         }
 
         function showOverlay(msg, videoSrc, isFinal = false) {
-    isPlaying = false;
-    cancelAnimationFrame(animationFrame);
-    
-    // Kecilkan volume musik saat video muncul
-    document.getElementById("bgm").volume = 0.3;
+            isPlaying = false;
+            cancelAnimationFrame(animationFrame);
+            bgm.volume = 0.2; // Kecilkan musik saat video/pesan muncul
 
-    const overlay = document.getElementById("overlay");
-    const video = document.getElementById("finish-video");
-    const source = document.getElementById("video-source");
-    source.src = videoSrc;
-    video.load();
-    video.play();
-    
-    document.getElementById("message-text").innerText = msg;
-    overlay.style.display = "block";
+            const overlay = document.getElementById("overlay");
+            const video = document.getElementById("finish-video");
+            const source = document.getElementById("video-source");
+            source.src = videoSrc;
+            video.load();
+            video.play();
+            
+            document.getElementById("message-text").innerText = msg;
+            overlay.style.display = "block";
 
-    if (isFinal) {
-        document.getElementById("next-btn").style.display = "none";
-        document.getElementById("wa-section").style.display = "block";
-        aktifkanTombolLari();
-    }
-}
+            if (isFinal) {
+                document.getElementById("next-btn").style.display = "none";
+                document.getElementById("wa-section").style.display = "block";
+                aktifkanTombolLari();
+            }
+        }
 
-function nextLevel() {
-    level++;
-    document.getElementById("lvl").innerText = level;
-    speed += 2; 
-    
-    // Keraskan kembali volume musik
-    document.getElementById("bgm").volume = 1.0;
-
-    document.getElementById("overlay").style.display = "none";
-    isPlaying = true;
-    obstacles = []; 
-    update();
-}
+        function nextLevel() {
+            level++;
+            document.getElementById("lvl").innerText = level;
+            speed += 2; 
+            bgm.volume = 1.0; // Keraskan musik lagi
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("finish-video").pause();
+            isPlaying = true;
+            obstacles = []; 
+            update();
+        }
 
         function resetLevel() {
             if(level === 1) score = 0;
@@ -232,34 +230,34 @@ function nextLevel() {
             obstacles = [];
         }
 
-        // --- FUNGSI LOMPAT ---
-      let musicStarted = false;
-const bgm = document.getElementById("bgm");
+        // --- KONTROL & MUSIK ---
+        function lompat() {
+            // Memulai musik pada interaksi pertama
+            if (!musicStarted) {
+                bgm.play().catch(e => console.log("Audio diblokir"));
+                musicStarted = true;
+            }
 
-function lompat() {
-    // Paksa audio untuk "Bangun" (Resume) - Khusus untuk HP
-    if (!musicStarted) {
-        // Logika untuk membangunkan Audio Context yang tidur di HP
-        bgm.play().then(() => {
-            musicStarted = true;
-        }).catch(err => {
-            console.log("Menunggu interaksi user untuk suara...");
+            if (isPlaying && flamingo.grounded) {
+                flamingo.dy = -flamingo.jump;
+                flamingo.grounded = false;
+            }
+        }
+
+        // Kontrol Spasi (Laptop)
+        window.addEventListener("keydown", (e) => {
+            if (e.code === "Space") {
+                e.preventDefault(); // Mencegah halaman scroll ke bawah saat tekan spasi
+                lompat();
+            }
         });
-    }
 
-    if (isPlaying && flamingo.grounded) {
-        flamingo.dy = -flamingo.jump;
-        flamingo.grounded = false;
-    }
-}
-
-// Tambahkan ini agar saat pertama kali layar disentuh, audio langsung 'dipancing'
-window.addEventListener("touchstart", function() {
-    if (!musicStarted) {
-        bgm.play();
-        musicStarted = true;
-    }
-}, { once: true }); // 'once: true' artinya hanya jalan sekali saat tap pertama
+        // Kontrol Tap (HP)
+        window.addEventListener("touchstart", (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                lompat();
+            }
+        }, { passive: false });
 
         // --- LOGIKA TOMBOL LARI ---
         function pindahPosisi() {
@@ -280,9 +278,9 @@ window.addEventListener("touchstart", function() {
         }
 
         function sendWA() {
-            const phone = "628xxxxxxxxxx"; // GANTI NOMOR WA
+            const phone = "6285811139333"; 
             const text = "Iya, aku mauu! ❤️";
-            window.location.href = `https://wa.me/${+6285811139333}?text=${encodeURIComponent(text)}`;
+            window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
         }
     </script>
 </body>
