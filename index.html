@@ -233,14 +233,18 @@ function nextLevel() {
         }
 
         // --- FUNGSI LOMPAT ---
-        let musicStarted = false;
+      let musicStarted = false;
+const bgm = document.getElementById("bgm");
 
 function lompat() {
-    // Memulai musik pada tap pertama
+    // Paksa audio untuk "Bangun" (Resume) - Khusus untuk HP
     if (!musicStarted) {
-        const music = document.getElementById("bgm");
-        music.play();
-        musicStarted = true;
+        // Logika untuk membangunkan Audio Context yang tidur di HP
+        bgm.play().then(() => {
+            musicStarted = true;
+        }).catch(err => {
+            console.log("Menunggu interaksi user untuk suara...");
+        });
     }
 
     if (isPlaying && flamingo.grounded) {
@@ -249,10 +253,13 @@ function lompat() {
     }
 }
 
-        window.addEventListener("keydown", (e) => { if (e.code === "Space") lompat(); });
-        window.addEventListener("touchstart", (e) => {
-            if (e.target.tagName !== 'BUTTON') lompat();
-        }, { passive: false });
+// Tambahkan ini agar saat pertama kali layar disentuh, audio langsung 'dipancing'
+window.addEventListener("touchstart", function() {
+    if (!musicStarted) {
+        bgm.play();
+        musicStarted = true;
+    }
+}, { once: true }); // 'once: true' artinya hanya jalan sekali saat tap pertama
 
         // --- LOGIKA TOMBOL LARI ---
         function pindahPosisi() {
