@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flamingo Love Journey</title>
+    <style>
+        body { 
+            text-align: center; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #ffe5ec; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        #game-container { position: relative; width: 100%; max-width: 800px; margin: auto; }
+        canvas { 
+            background: #fff; 
+            display: block; 
+            margin: 20px auto; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-bottom: 5px solid #ffb3c1;
+        }
+        #ui { margin-top: 20px; color: #ff4d6d; }
+        
+        /* Overlay Style */
+        #overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); 
+            color: white; 
+            z-index: 10;
+            padding-top: 50px;
+        }
+        video { 
+            border: 5px solid #ff4d6d; 
+            border-radius: 15px; 
+            max-width: 80%; 
+            height: auto; 
+        }
+        .msg { font-size: 1.2rem; margin: 20px; line-height: 1.5; padding: 0 20px; }
+        .btn { 
+            padding: 15px 30px; 
+            background: #ff4d6d; 
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+        }
+        .btn:hover { background: #ff758f; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>💖 Flamingo Run 💖</h1>
+        <h3>Level: <span id="lvl">1</span> | Score: <span id="scr">0</span></h3>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="overlay">
+        <video id="finish-video" loop playsinline muted> <source id="video-source" src="" type="video/mp4">
+        </video>
+        <div class="msg" id="message-text"></div>
+        
+        <button id="next-btn" class="btn" onclick="nextLevel()">Lanjut!</button>
+        
+        <div id="wa-section" style="display:none; margin-top: 30px;">
+            <button class="btn" onclick="sendWA()" style="position: relative; z-index: 10;">MAUUU! ❤️</button>
+            
+            <button id="btn-tidak" class="btn" 
+                    style="background: #bdc3c7; position: fixed; transition: all 0.1s ease; z-index: 99; left: 60%; top: 70%;">
+                    Enggak
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 800;
+        canvas.height = 250;
+
+        // Game Variables
+        let level = 1;
+        let score = 0;
+        let isPlaying = true;
+        let speed = 6;
+        let animationFrame;
+
+        // Assets Loader
+        let assetsLoaded = 0;
+        let totalAssets = 2; // Hanya Flamingo dan Kaktus
+
+        function assetLoaded() {
+            assetsLoaded++;
+            if (assetsLoaded === totalAssets) {
+                update(); // Mulai game hanya setelah gambar siap
+            }
+        }
+
+        const flamingoImg = new Image();
+        flamingoImg.src = 'flamingo.png';
+        flamingoImg.onload = assetLoaded;
+
+        const kaktusImg = new Image();
+        kaktusImg.src = 'kaktus.png';
+        kaktusImg.onload = assetLoaded;
+
+        // Flamingo Object
+        let flamingo = { x: 50, y: 190, w: 50, h: 50, dy: 0, jump: 12, grounded: false };
+        let obstacles = [];
+
+        function spawnObstacle() {
+            // Tinggi kaktus asli bervariasi tapi tetap masuk akal
+            let height = 40 + Math.random() * 30;
+            // Kaktus asli lebih kurus
+            obstacles.push({ x: canvas.width, y: 240 - height, w: 25, h: height });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Ground line
+            ctx.strokeStyle = "#ffb3c1";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 240);
+            ctx.lineTo(canvas.width, 240);
+            ctx.stroke();
+
+            // --- Draw Real Flamingo ---
+            if (flamingoImg.complete) {
+                ctx.drawImage(flamingoImg, flamingo.x, flamingo.y, flamingo.w, flamingo.h);
+            } else {
+                // Placeholder jika gambar gagal dimuat
+                ctx.fillStyle = "#ff758f";
+                ctx.fillRect(flamingo.x, flamingo.y, flamingo.w, flamingo.h);
+            }
+
+            // --- Draw Real Obstacles (Kaktus) ---
+            if (kaktusImg.complete) {
+                obstacles.forEach(obs => {
+                    ctx.drawImage(kaktusImg, obs.x, obs.y, obs.w, obs.h);
+                });
+            } else {
+                // Placeholder
+                ctx.fillStyle = "#2d6a4f";
+                obstacles.forEach(obs => {
+                    ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                });
+            }
+        }
+
+        function update() {
+            if (!isPlaying) return;
+
+            // Physics
+            if (!flamingo.grounded) {
+                flamingo.dy += 0.7;
+                flamingo.y += flamingo.dy;
+            }
+
+            if (flamingo.y > 190) {
+                flamingo.y = 190;
+                flamingo.dy = 0;
+                flamingo.grounded = true;
+            }
+
+            // Move Obstacles
+            obstacles.forEach((obs, i) => {
+                obs.x -= speed;
+
+                // Collision Detection
+                // Gunakan margin kecil (padding) karena gambar asli sering punya spasi kosong di PNG
+                let padding = 5;
+                if (flamingo.x + padding < obs.x + obs.w - padding && 
+                    flamingo.x + flamingo.w - padding > obs.x + padding && 
+                    flamingo.y + padding < obs.y + obs.h - padding && 
+                    flamingo.y + flamingo.h - padding > obs.y + padding) {
+                    resetLevel();
+                }
+
+                // Point scoring
+                if (obs.x + obs.w < 0) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    document.getElementById("scr").innerText = score;
+                    checkLevel();
+                }
+            });
+
+            if (Math.random() < 0.015) spawnObstacle();
+
+            draw();
+            animationFrame = requestAnimationFrame(update);
+        }
+
+        function checkLevel() {
+            if (score === 5 && level === 1) {
+                showOverlay("Loncatin kaktus aja kamu jago, apalagi loncatin masa lalu buat ke masa depan bareng aku? Aku sih udah nyaman...", "video1.mp4");
+            } 
+            else if (score === 12 && level === 2) {
+                showOverlay("Rintangan game ini makin cepet, tapi rasa sayangku jalannya jauh lebih cepet lagi. Siap buat rintangan terakhir?", "video2.mp4");
+            } 
+            else if (score === 20 && level === 3) {
+                showOverlay("Game Over! Tapi tenang, yang berakhir cuma gamenya. Daripada jago mainin flamingo, mending jago jadi pacar aku. Gas? ❤️", "video3.mp4", true);
+            }
+        }
+
+        function showOverlay(msg, videoSrc, isFinal = false) {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrame);
+
+            const overlay = document.getElementById("overlay");
+            const video = document.getElementById("finish-video");
+            const source = document.getElementById("video-source");
+            
+            source.src = videoSrc;
+            video.load();
+            video.play();
+
+            document.getElementById("message-text").innerText = msg;
+            overlay.style.display = "block";
+
+            if (isFinal) {
+    document.getElementById("next-btn").style.display = "none";
+    document.getElementById("wa-section").style.display = "block";
+    aktifkanTombolLari(); // Ini agar fitur tombol lari aktif di level akhir
+}
+        }
+
+        function nextLevel() {
+            level++;
+            document.getElementById("lvl").innerText = level;
+            speed += 2; 
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("finish-video").pause();
+            isPlaying = true;
+            obstacles = []; 
+            update();
+        }
+
+        function resetLevel() {
+            if(level === 1) score = 0;
+            else if(level === 2) score = 6;
+            else if(level === 3) score = 13;
+            
+            document.getElementById("scr").innerText = score;
+            obstacles = [];
+        }
+
+        // Controls
+        window.addEventListener("keydown", (e) => {
+            if (e.code === "Space" && flamingo.grounded) {
+                flamingo.dy = -flamingo.jump;
+                flamingo.grounded = false;
+            }
+        });
+        
+        canvas.addEventListener("touchstart", () => {
+            if (flamingo.grounded) {
+                flamingo.dy = -flamingo.jump;
+                flamingo.grounded = false;
+            }
+        });
+
+        function sendWA() {
+            const phone = "628xxxxxxxxxx"; // <--- GANTI NOMOR WA KAMU DISINI
+            const text = "Iya, aku mauu! ❤️";
+            window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+        }
+
+        // Hapus `update()` dari sini, game akan mulai di fungsi `assetLoaded`
+
+        function pindahPosisi() {
+    const btn = document.getElementById('btn-tidak');
+    
+    // Menghitung batas layar
+    const maxX = window.innerWidth - btn.offsetWidth - 20;
+    const maxY = window.innerHeight - btn.offsetHeight - 20;
+    
+    // Koordinat acak
+    const randomX = Math.floor(Math.random() * maxX);
+    const randomY = Math.floor(Math.random() * maxY);
+    
+    btn.style.left = randomX + 'px';
+    btn.style.top = randomY + 'px';
+}
+
+function aktifkanTombolLari() {
+    const btnTidak = document.getElementById('btn-tidak');
+
+    // Saat diklik pakai Mouse (PC)
+    btnTidak.onmousedown = function() {
+        pindahPosisi();
+    };
+
+    // Saat ditekan pakai Jari (HP)
+    btnTidak.ontouchstart = function(e) {
+        e.preventDefault(); // Mencegah klik terproses
+        pindahPosisi();
+    };
+
+    // Opsional: Jika dia pakai keyboard (Tab + Enter), tombol tetap pindah
+    btnTidak.onclick = function(e) {
+        e.preventDefault();
+        pindahPosisi();
+    };
+}
+    </script>
+</body>
+</html>
