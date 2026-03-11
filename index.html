@@ -57,6 +57,10 @@
 </head>
 <body>
 
+    <audio id="bgm" loop>
+        <source src="musik_ceria.mp3" type="audio/mpeg">
+    </audio>
+
     <div id="ui">
         <h1>💖 Flamingo Run 💖</h1>
         <h3>Level: <span id="lvl">1</span> | Score: <span id="scr">0</span></h3>
@@ -177,39 +181,48 @@
         }
 
         function checkLevel() {
-            if (score === 5 && level === 1) showOverlay("Loncatin kaktus aja kamu jago, apalagi loncatin masa lalu buat ke masa depan bareng aku? Aku sih udah nyaman...", "video1.mp4");
+            if (score === 5 && level === 1) showOverlay("Loncatin kaktus aja kamu jago, apalagi loncatin masa lalu buat ke masa depan bareng aku!!", "video1.mp4");
             else if (score === 12 && level === 2) showOverlay("Rintangan game ini makin cepet, tapi rasa sayangku jalannya jauh lebih cepet lagi. Siap buat rintangan terakhir?", "video2.mp4");
-            else if (score === 20 && level === 3) showOverlay("Game Over! Tapi tenang, yang berakhir cuma gamenya. Daripada jago mainin flamingo, mending jago jadi pacar aku. Gas? ❤️", "video3.mp4", true);
+            else if (score === 20 && level === 3) showOverlay("Game Over! Tapi tenang, yang berakhir cuma gamenya. Daripada jago mainin flamingo, mending jago jadi pacar aku.❤️", "video3.mp4", true);
         }
 
         function showOverlay(msg, videoSrc, isFinal = false) {
-            isPlaying = false;
-            cancelAnimationFrame(animationFrame);
-            const overlay = document.getElementById("overlay");
-            const video = document.getElementById("finish-video");
-            const source = document.getElementById("video-source");
-            source.src = videoSrc;
-            video.load();
-            video.play();
-            document.getElementById("message-text").innerText = msg;
-            overlay.style.display = "block";
+    isPlaying = false;
+    cancelAnimationFrame(animationFrame);
+    
+    // Kecilkan volume musik saat video muncul
+    document.getElementById("bgm").volume = 0.3;
 
-            if (isFinal) {
-                document.getElementById("next-btn").style.display = "none";
-                document.getElementById("wa-section").style.display = "block";
-                aktifkanTombolLari();
-            }
-        }
+    const overlay = document.getElementById("overlay");
+    const video = document.getElementById("finish-video");
+    const source = document.getElementById("video-source");
+    source.src = videoSrc;
+    video.load();
+    video.play();
+    
+    document.getElementById("message-text").innerText = msg;
+    overlay.style.display = "block";
 
-        function nextLevel() {
-            level++;
-            document.getElementById("lvl").innerText = level;
-            speed += 2; 
-            document.getElementById("overlay").style.display = "none";
-            isPlaying = true;
-            obstacles = []; 
-            update();
-        }
+    if (isFinal) {
+        document.getElementById("next-btn").style.display = "none";
+        document.getElementById("wa-section").style.display = "block";
+        aktifkanTombolLari();
+    }
+}
+
+function nextLevel() {
+    level++;
+    document.getElementById("lvl").innerText = level;
+    speed += 2; 
+    
+    // Keraskan kembali volume musik
+    document.getElementById("bgm").volume = 1.0;
+
+    document.getElementById("overlay").style.display = "none";
+    isPlaying = true;
+    obstacles = []; 
+    update();
+}
 
         function resetLevel() {
             if(level === 1) score = 0;
@@ -220,12 +233,21 @@
         }
 
         // --- FUNGSI LOMPAT ---
-        function lompat() {
-            if (isPlaying && flamingo.grounded) {
-                flamingo.dy = -flamingo.jump;
-                flamingo.grounded = false;
-            }
-        }
+        let musicStarted = false;
+
+function lompat() {
+    // Memulai musik pada tap pertama
+    if (!musicStarted) {
+        const music = document.getElementById("bgm");
+        music.play();
+        musicStarted = true;
+    }
+
+    if (isPlaying && flamingo.grounded) {
+        flamingo.dy = -flamingo.jump;
+        flamingo.grounded = false;
+    }
+}
 
         window.addEventListener("keydown", (e) => { if (e.code === "Space") lompat(); });
         window.addEventListener("touchstart", (e) => {
@@ -253,7 +275,7 @@
         function sendWA() {
             const phone = "628xxxxxxxxxx"; // GANTI NOMOR WA
             const text = "Iya, aku mauu! ❤️";
-            window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+            window.location.href = `https://wa.me/${+6285811139333}?text=${encodeURIComponent(text)}`;
         }
     </script>
 </body>
