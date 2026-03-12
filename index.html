@@ -184,9 +184,9 @@
         }
 
         function checkLevel() {
-            if (score === 5 && level === 1) showOverlay("Loncatin kaktus aja kamu jago, apalagi loncatin masa lalu buat ke masa depan bareng aku!!", "video1.mp4");
-            else if (score === 12 && level === 2) showOverlay("Rintangan game ini makin cepet, tapi rasa sayangku jalannya jauh lebih cepet lagi. Siap buat rintangan terakhir?", "video2.mp4");
-            else if (score === 20 && level === 3) showOverlay("Game Over! Tapi tenang, yang berakhir cuma gamenya. Daripada jago mainin flamingo, mending jago jadi pacar aku.❤️", "video3.mp4", true);
+            if (score === 7 && level === 1) showOverlay("Loncatin kaktus aja kamu jago, apalagi loncatin masa lalu buat ke masa depan bareng aku!!", "video1.mp4");
+            else if (score === 16 && level === 2) showOverlay("Rintangan game ini makin cepet, tapi rasa sayangku jalannya jauh lebih cepet lagi. Siap buat rintangan terakhir?", "video2.mp4");
+            else if (score === 26 && level === 3) showOverlay("Game Over! Tapi tenang, yang berakhir cuma gamenya. Daripada jago mainin flamingo, mending jago jadi pacar aku.❤️", "video3.mp4", true);
         }
 
         function showOverlay(msg, videoSrc, isFinal = false) {
@@ -225,8 +225,8 @@
 
         function resetLevel() {
             if(level === 1) score = 0;
-            else if(level === 2) score = 6;
-            else if(level === 3) score = 13;
+            else if(level === 2) score = 8;
+            else if(level === 3) score = 17;
             document.getElementById("scr").innerText = score;
             obstacles = [];
         }
